@@ -33,7 +33,7 @@ public final class ClientRequest {
     private final long createdTimeMs;
     private final boolean expectResponse;
     private final int requestTimeoutMs;
-    private final RequestCompletionHandler callback; //
+    private final RequestCompletionHandler callback;
 
     /**
      * @param destination The brokerId to send the request to

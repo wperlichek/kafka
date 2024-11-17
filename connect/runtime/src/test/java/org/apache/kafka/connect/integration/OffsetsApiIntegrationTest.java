@@ -95,7 +95,7 @@ public class OffsetsApiIntegrationTest {
     public void setup(TestInfo testInfo) {
         connectorName = testInfo.getTestMethod().get().getName();
         topic = testInfo.getTestMethod().get().getName();
-        connect = defaultConnectCluster();
+        connect = defaultConnectCluster(); //
     }
 
     @AfterEach

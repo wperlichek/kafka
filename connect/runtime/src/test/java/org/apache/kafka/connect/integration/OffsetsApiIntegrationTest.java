@@ -772,7 +772,18 @@ public class OffsetsApiIntegrationTest {
         );
 
         // Reset the sink connector's offsets, with retry logic (since we just stopped the connector)
-        String response = modifySinkConnectorOffsetsWithRetry(null);
+        String response = "";
+        try {
+            response = modifySinkConnectorOffsetsWithRetry(null);
+        } catch (AssertionError e) {
+            if (e.getMessage().contains("If it doesn't eventually succeed, the Connect cluster may need to be restarted to get rid of the zombie sink tasks.")) {
+                try (AutoCloseable ignored = kafkaCluster::stop) {
+                    kafkaCluster.start();
+                }
+                response = modifySinkConnectorOffsetsWithRetry(null);
+            }
+        }
+
         assertTrue(response.contains("The Connect framework-managed offsets for this connector have been reset successfully. " +
                 "However, if this connector manages offsets externally, they will need to be manually reset in the system that the connector uses."));
 
@@ -944,7 +955,7 @@ public class OffsetsApiIntegrationTest {
         // Some retry logic is necessary to account for KAFKA-15826,
         // where laggy sink task startup/shutdown can leave consumers running
         String modifyVerb = offsetsToAlter != null ?  "alter" : "reset";
-        String conditionDetails = "Failed to " + modifyVerb + " sink connector offsets in time";
+        AtomicReference<String> connectRestExceptionMessage = new AtomicReference<>();
         AtomicReference<String> responseReference = new AtomicReference<>();
         waitForCondition(
                 () -> {
@@ -954,8 +965,9 @@ public class OffsetsApiIntegrationTest {
                         } else {
                             responseReference.set(connect.alterConnectorOffsets(connectorName, offsetsToAlter));
                         }
-                        return true;
+                        return false;
                     } catch (ConnectRestException e) {
+                        connectRestExceptionMessage.set(e.getMessage());
                         boolean internalServerError = e.statusCode() == INTERNAL_SERVER_ERROR.getStatusCode();
 
                         String message = Optional.of(e.getMessage()).orElse("");
@@ -975,7 +987,8 @@ public class OffsetsApiIntegrationTest {
                     }
                 },
                 30_000,
-                conditionDetails
+                "Failed to " + modifyVerb + " sink connector offsets in time" +
+                        (connectRestExceptionMessage.get() != null ? ": " + connectRestExceptionMessage.get() : "")
         );
         return responseReference.get();
     }

@@ -392,6 +392,8 @@ public class TestUtils {
         retryOnExceptionWithTimeout(maxWaitMs, pollIntervalMs, () -> {
             String conditionDetailsSupplied = conditionDetailsSupplier != null ? conditionDetailsSupplier.get() : null;
             String conditionDetails = conditionDetailsSupplied != null ? conditionDetailsSupplied : "";
+            log.info("condition details supplied {}", conditionDetailsSupplied);
+            log.info("updated condition details {} ", conditionDetails);
             assertTrue(testCondition.conditionMet(),
                 "Condition not met within timeout " + maxWaitMs + ". " + conditionDetails);
         });

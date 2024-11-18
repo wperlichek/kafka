@@ -779,7 +779,7 @@ public class OffsetsApiIntegrationTest {
         try {
             response = modifySinkConnectorOffsetsWithRetry(null);
         } catch (AssertionError e) {
-            log.info("yep caught the exception: {}", e.getMessage());
+            log.info("yep caught the exception: {}", e.getMessage()); // not surfacing the rest api connection problem...
             if (e.getMessage().contains("Connect cluster may need to be restarted to get rid of the zombie sink tasks.")) {
                 // restart the Connect cluster and try one last time
                 log.info("Restarting connect.....");
@@ -962,8 +962,7 @@ public class OffsetsApiIntegrationTest {
     private String modifySinkConnectorOffsetsWithRetry(ConnectorOffsets offsetsToAlter) throws InterruptedException {
         // Some retry logic is necessary to account for KAFKA-15826,
         // where laggy sink task startup/shutdown can leave consumers running
-        String modifyVerb = offsetsToAlter != null ?  "alter" : "reset";
-        AtomicReference<String> connectRestExceptionMessage = new AtomicReference<>();
+        AtomicReference<String> connectRestExceptionMessage = new AtomicReference<>("MasterP");
         AtomicReference<String> responseReference = new AtomicReference<>();
         waitForCondition(
                 () -> {
@@ -998,8 +997,7 @@ public class OffsetsApiIntegrationTest {
                     }
                 },
                 30_000,
-                "Failed to " + modifyVerb + " sink connector offsets in time" +
-                        (connectRestExceptionMessage.get() != null ? ": " + connectRestExceptionMessage.get() : "")
+                connectRestExceptionMessage::get // DOES surface the rest api connection problem
         );
         return responseReference.get();
     }

@@ -724,8 +724,9 @@ abstract class EmbeddedConnect {
         if (response.getStatus() < Response.Status.BAD_REQUEST.getStatusCode()) {
             return responseToString(response);
         } else {
+            String resp = "Connect cluster may need to be restarted to get rid of the zombie sink tasks";
             throw new ConnectRestException(response.getStatus(),
-                    "Could not alter connector offsets. Error response: " + responseToString(response));
+                    "Could not alter connector offsets. Error response: " + resp);
         }
     }
 
@@ -741,8 +742,9 @@ abstract class EmbeddedConnect {
         if (response.getStatus() < Response.Status.BAD_REQUEST.getStatusCode()) {
             return responseToString(response);
         } else {
+            String resp = "Connect cluster may need to be restarted to get rid of the zombie sink tasks";
             throw new ConnectRestException(response.getStatus(),
-                    "Could not reset connector offsets. Error response: " + responseToString(response));
+                    "Could not reset connector offsets. Error response: " + resp);
         }
     }
 

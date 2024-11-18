@@ -735,6 +735,7 @@ abstract class EmbeddedConnect {
      * @param connectorName name of the connector whose offsets are to be reset
      */
     public String resetConnectorOffsets(String connectorName) {
+        // force a group not found here..
         String url = endpointForResource(String.format("connectors/%s/offsets", connectorName));
         Response response = requestDelete(url);
         if (response.getStatus() < Response.Status.BAD_REQUEST.getStatusCode()) {

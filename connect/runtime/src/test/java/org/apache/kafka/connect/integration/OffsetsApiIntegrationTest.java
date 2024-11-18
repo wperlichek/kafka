@@ -326,6 +326,7 @@ public class OffsetsApiIntegrationTest {
         assertEquals(400, e.errorCode());
     }
 
+    // Very low fails
     @Test
     public void testAlterSinkConnectorOffsets() throws Exception {
         alterAndVerifySinkConnectorOffsets(baseSinkConnectorConfigs(), connect.kafka());
@@ -349,6 +350,7 @@ public class OffsetsApiIntegrationTest {
         }
     }
 
+    // Heavy fails
     @Flaky("KAFKA-16492")
     @Test
     public void testAlterSinkConnectorOffsetsDifferentKafkaClusterTargeted() throws Exception {
@@ -730,6 +732,7 @@ public class OffsetsApiIntegrationTest {
         }
     }
 
+    // No fails
     @Test
     public void testResetSinkConnectorOffsetsDifferentKafkaClusterTargeted() throws Exception {
         EmbeddedKafkaCluster kafkaCluster = new EmbeddedKafkaCluster(1, new Properties());
@@ -777,10 +780,11 @@ public class OffsetsApiIntegrationTest {
             response = modifySinkConnectorOffsetsWithRetry(null);
         } catch (AssertionError e) {
             if (e.getMessage().contains("If it doesn't eventually succeed, the Connect cluster may need to be restarted to get rid of the zombie sink tasks.")) {
-                try (AutoCloseable ignored = kafkaCluster::stop) {
-                    kafkaCluster.start();
-                }
+                // restart the Connect cluster and try one last time
+                connect.startConnect();
                 response = modifySinkConnectorOffsetsWithRetry(null);
+            } else {
+                throw e;
             }
         }
 

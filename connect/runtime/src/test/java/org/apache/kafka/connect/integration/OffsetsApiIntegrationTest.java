@@ -779,11 +779,15 @@ public class OffsetsApiIntegrationTest {
         try {
             response = modifySinkConnectorOffsetsWithRetry(null);
         } catch (AssertionError e) {
-            if (e.getMessage().contains("If it doesn't eventually succeed, the Connect cluster may need to be restarted to get rid of the zombie sink tasks.")) {
+            log.info("yep caught the exception: {}", e.getMessage());
+            if (e.getMessage().contains("Connect cluster may need to be restarted to get rid of the zombie sink tasks.")) {
                 // restart the Connect cluster and try one last time
+                log.info("Restarting connect.....");
                 connect.startConnect();
+                log.info("trying modidySinkConnectorOffsetsWithRetry one last time.....");
                 response = modifySinkConnectorOffsetsWithRetry(null);
             } else {
+                // just throw it
                 throw e;
             }
         }
@@ -971,16 +975,19 @@ public class OffsetsApiIntegrationTest {
                         }
                         return false;
                     } catch (ConnectRestException e) {
+                        log.info("hello we're catching the exception: {}", e.getMessage());
                         connectRestExceptionMessage.set(e.getMessage());
+                        log.info("even settings the rest exception message: {}", connectRestExceptionMessage.get());
                         boolean internalServerError = e.statusCode() == INTERNAL_SERVER_ERROR.getStatusCode();
 
                         String message = Optional.of(e.getMessage()).orElse("");
                         boolean failedToModifyConsumerOffsets = message.contains(
-                                "Failed to " + modifyVerb + " consumer group offsets for connector"
+                                "Connect cluster may need to be restarted to get rid of the zombie sink tasks"
                         );
-                        boolean canBeRetried = message.contains("If the connector is in a stopped state, this operation can be safely retried");
-
+                        boolean canBeRetried = message.contains("Connect cluster may need to be restarted to get rid of the zombie sink tasks");
                         boolean retriable = internalServerError && failedToModifyConsumerOffsets && canBeRetried;
+                        log.info("PBCULTURE: internalServerError: {}, failedToModifyConsumerOffsets: {}, canBeRetried: {}, retriable: {}",
+                                internalServerError, failedToModifyConsumerOffsets, canBeRetried, retriable);
                         if (retriable) {
                             return false;
                         } else {

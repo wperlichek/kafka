@@ -711,23 +711,9 @@ abstract class EmbeddedConnect {
      * @return the API response as a {@link java.lang.String}
      */
     public String alterConnectorOffsets(String connectorName, ConnectorOffsets offsets) {
-        String url = endpointForResource(String.format("connectors/%s/offsets", connectorName));
-        ObjectMapper mapper = new ObjectMapper();
-        String content;
-        try {
-            content = mapper.writeValueAsString(offsets);
-        } catch (IOException e) {
-            throw new ConnectException("Could not serialize connector offsets and execute PATCH request");
-        }
-
-        Response response = requestPatch(url, content);
-        if (response.getStatus() < Response.Status.BAD_REQUEST.getStatusCode()) {
-            return responseToString(response);
-        } else {
-            String resp = "Connect cluster may need to be restarted to get rid of the zombie sink tasks";
-            throw new ConnectRestException(response.getStatus(),
-                    "Could not alter connector offsets. Error response: " + resp);
-        }
+        String resp = "Connect cluster may need to be restarted to get rid of the zombie sink tasks";
+        throw new ConnectRestException(500,
+                "Could not alter connector offsets. Error response: " + resp);
     }
 
     /**
@@ -736,16 +722,9 @@ abstract class EmbeddedConnect {
      * @param connectorName name of the connector whose offsets are to be reset
      */
     public String resetConnectorOffsets(String connectorName) {
-        // force a group not found here..
-        String url = endpointForResource(String.format("connectors/%s/offsets", connectorName));
-        Response response = requestDelete(url);
-        if (response.getStatus() < Response.Status.BAD_REQUEST.getStatusCode()) {
-            return responseToString(response);
-        } else {
-            String resp = "Connect cluster may need to be restarted to get rid of the zombie sink tasks";
-            throw new ConnectRestException(response.getStatus(),
+        String resp = "Connect cluster may need to be restarted to get rid of the zombie sink tasks";
+        throw new ConnectRestException(500,
                     "Could not reset connector offsets. Error response: " + resp);
-        }
     }
 
     /**

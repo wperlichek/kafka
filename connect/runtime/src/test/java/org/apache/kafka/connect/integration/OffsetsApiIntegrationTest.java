@@ -780,7 +780,7 @@ public class OffsetsApiIntegrationTest {
             response = modifySinkConnectorOffsetsWithRetry(null);
         } catch (AssertionError e) {
             log.info("yep caught the exception: {}", e.getMessage()); // not surfacing the rest api connection problem...
-            if (e.getMessage().contains("Connect cluster may need to be restarted to get rid of the zombie sink tasks.")) {
+            if (e.getMessage().contains("Connect cluster may need to be restarted to get rid of the zombie sink tasks")) {
                 // restart the Connect cluster and try one last time
                 log.info("Restarting connect.....");
                 connect.startConnect();
